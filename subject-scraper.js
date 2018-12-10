@@ -2,18 +2,12 @@ const request = require("request");
 const cheerio = require("cheerio");
 const _cliProgress = require("cli-progress");
 const fs = require("fs");
-
-let offerings = [];
+ 
 class SubjectInfo {
   constructor(code, name, offered) {
     this.code = code;
     this.name = name;
-    this.offered = offered;
-    this.offered.forEach(period => {
-      if (!offerings.includes(period)) {
-        offerings.push(period);
-      }
-    });
+    this.offered = offered; 
   }
   get fullCode() {
     let output = this.code + " - " + this.name;
