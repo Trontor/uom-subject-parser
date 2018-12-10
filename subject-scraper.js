@@ -1,7 +1,10 @@
 const request = require('request');
 const cheerio = require('cheerio');
+const _cliProgress = require('cli-progress');
+
 
 let offerings = [];
+
 class SubjectInfo {
     constructor(code, name, offered){
         this.code = code;
@@ -67,19 +70,18 @@ const getHTML = (URL, callback) => {
     });
 }
 
-const getPageCount = (callback) => {
-    const searchURL = generateSearchURL();
-    getHTML(searchURL, html => {
+const getPageCount = (baseURL, callback) => {
+    getHTML(baseURL, html => {
         const $ = cheerio.load(html);
         const pageCountDirty = $('.search-results__paginate > div > span').text();
-        const pageCountClean = pageCountDirty.replace(/^\D+/g, '');
+        const pageCountClean = parseInt(pageCountDirty.replace(/^\D+/g, ''));
         console.log(`There are ${pageCountClean} pages to parse.`);
         callback(pageCountClean);
     });
 }
 
-const scrapePage = (number, maxPages, callback, finishedCallBack) => {
-    const pageURL = generateSearchURL() + `&page=${number}`;
+const scrapePage = (baseURL, number, maxPages, callback, finishedCallBack) => {
+    const pageURL = baseURL + `&page=${number}`;
     getHTML(pageURL, html =>{ 
         pageSubjects = [];
         const $ = cheerio.load(html);
@@ -100,27 +102,32 @@ const scrapePage = (number, maxPages, callback, finishedCallBack) => {
             pageSubjects.push(newSubject);
         });
         pagesScraped++; 
+        //process.stdout.write(`(${pagesScraped}/${maxPages}) `);
         callback(pageSubjects);
         if (pagesScraped == maxPages){
             finishedCallBack();
         }
     });     
 }
-
+ 
 let pagesScraped = 0;
-let allSubjects = [];
-const scrapeSubjects = (callback) =>{
+const scrapeBar = new _cliProgress.Bar({}, _cliProgress.Presets.shades_classic);
+const scrapeSubjects = (finishedCallBack) => {
     pagesScraped = 0;
-    getPageCount(count => {
-        for (let pageNo = 0; pageNo < count; pageNo++){
-            scrapePage(pageNo, count, pageSubjects=>{
+    let allSubjects = [];
+    const baseURL = generateSearchURL();
+    getPageCount(baseURL, count => {
+        scrapeBar.start(count, 1);
+        for (let pageNo = 1; pageNo <= count; pageNo++){
+            scrapePage(baseURL, pageNo, count, pageSubjects=>{
                 allSubjects = allSubjects.concat(pageSubjects);
-            }, callback);
+                scrapeBar.update(pagesScraped);
+            }, () => finishedCallBack(allSubjects));
         }
     });
-    return null;
 }
 
-scrapeSubjects(() => {
-    console.log(`A total of ${allSubjects.length} subjects were parsed. Offerings:\n\t${JSON.stringify(offerings)}`);
+scrapeSubjects((allSubjects) => {
+    scrapeBar.stop();
+    console.log(`A total of ${allSubjects.length} subjects were parsed.`);
 });
