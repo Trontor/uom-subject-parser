@@ -2,7 +2,8 @@ const request = require("request");
 const cheerio = require("cheerio");
 const _cliProgress = require("cli-progress");
 const fs = require("fs");
- 
+const progressBarStyle = _cliProgress.Presets.shades_classic;
+
 class SubjectInfo {
   constructor(code, name, offered) {
     this.code = code;
@@ -68,7 +69,7 @@ const scrapeSubjects = (year, studyPeriod, finishedCallBack) => {
   const baseURL = generateSearchURL(year, studyPeriod);
   getPageCount(baseURL, count => {
     console.log(`There are ${count} pages to parse from ${decodeURI(baseURL)}.\n`);
-    const scrapeBar = new _cliProgress.Bar({}, _cliProgress.Presets.shades_classic);
+    const scrapeBar = new _cliProgress.Bar({}, progressBarStyle);
     scrapeBar.start(count, 1);
     for (let pageNo = 1; pageNo <= count; pageNo++) {
       scrapePage(
@@ -88,7 +89,6 @@ const scrapeSubjects = (year, studyPeriod, finishedCallBack) => {
   });
 };
 
-const begin = Date.now();
 const studyPeriods = [
     {
         "code": "semester_1",
@@ -110,10 +110,11 @@ const studyPeriods = [
     /* Year long and others not handled */
 ];
  
-const scrapeYear = (year, studyPeriodIndex = 0) => {
+const scrapeYear = (year, finishedScrapingCallback, studyPeriodIndex = 0) => {
     const studyPeriodName = studyPeriods[studyPeriodIndex].name;
-    console.log(`Scraping subjects for study period: ${studyPeriodName}`);
+    console.log(`Scraping subjects for study period: ${studyPeriodName} in ${year}`);
     const semCode = studyPeriods[studyPeriodIndex].code;
+    const begin = Date.now();
     scrapeSubjects(year, semCode, allSubjects => { 
         const end = Date.now();
         const timeSpent = (end - begin) / 1000;
@@ -126,7 +127,9 @@ const scrapeYear = (year, studyPeriodIndex = 0) => {
           }
           console.log(`Subject information was saved in JSON format to ${outputFileName}!\n`)
           if (studyPeriodIndex < studyPeriods.length - 1){
-            scrapeYear(year, ++studyPeriodIndex);
+            scrapeYear(year, finishedScrapingCallback, ++studyPeriodIndex);
+          } else {
+            finishedScrapingCallback();
           }
           return true;
         });
@@ -134,8 +137,16 @@ const scrapeYear = (year, studyPeriodIndex = 0) => {
     });
 }
 
-const currentYear = new Date().getFullYear();
-const nextYear = currentYear + 1;
+const thisYear = new Date().getFullYear();
+const nextYear = thisYear + 1;
+const startYear = thisYear - 1;
+
+let currentYear = startYear;
+const finishedScrapingYear = ()=>{
+    if (currentYear < nextYear){
+        scrapeYear(++currentYear, finishedScrapingYear);
+    }
+};
 
 /* driver function */
-scrapeYear(nextYear);
+scrapeYear(startYear, finishedScrapingYear);
