@@ -1,0 +1,24 @@
+{
+  "name": "uom-subject-parser",
+  "version": "1.0.0",
+  "description": "This is a helper script I wrote to retrieve a list of all subjects offered by The University of Melbourne in the closest study year. It will be used in conjunction with another UoM related tool. This is not affiliated with The University of Melbourne.",
+  "main": "subject-scraper.js",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.2",
+    "request": "^2.88.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Trontor/uom-subject-parser.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Trontor/uom-subject-parser/issues"
+  },
+  "homepage": "https://github.com/Trontor/uom-subject-parser#readme"
+}
