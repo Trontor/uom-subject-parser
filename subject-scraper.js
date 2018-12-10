@@ -83,9 +83,9 @@ const getPageCount = (baseURL, callback) => {
 const scrapePage = (baseURL, number, maxPages, callback, finishedCallBack) => {
     const pageURL = baseURL + `&page=${number}`;
     getHTML(pageURL, html =>{ 
-        pageSubjects = [];
+        const pageSubjects = [];
         const $ = cheerio.load(html);
-        const searchResults = $('.search-results__accordion > li').each(function(i, elm) {
+        $('.search-results__accordion > li').each(()=> {
             const subjectCode = $(this).find('.search-results__accordion-code').text();
             const title = $(this).find('.search-results__accordion-title').text().replace(subjectCode,"");
             const details = $(this).find('.search-results__accordion-detail').text();
