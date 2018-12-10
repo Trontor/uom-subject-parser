@@ -1,10 +1,10 @@
 const request = require('request');
 const cheerio = require('cheerio');
 const _cliProgress = require('cli-progress');
-
+const fs = require('fs');
+const outputFileName = "subjects.json";
 
 let offerings = [];
-
 class SubjectInfo {
     constructor(code, name, offered){
         this.code = code;
@@ -84,7 +84,8 @@ const scrapePage = (baseURL, number, maxPages, callback, finishedCallBack) => {
     getHTML(pageURL, html =>{ 
         const pageSubjects = [];
         const $ = cheerio.load(html);
-        $('.search-results__accordion > li').each(()=> {
+        const list = $('.search-results__accordion > li');
+        list.each(function() {
             const subjectCode = $(this).find('.search-results__accordion-code').text();
             const title = $(this).find('.search-results__accordion-title').text().replace(subjectCode,"");
             const details = $(this).find('.search-results__accordion-detail').text();
@@ -101,7 +102,6 @@ const scrapePage = (baseURL, number, maxPages, callback, finishedCallBack) => {
             pageSubjects.push(newSubject);
         });
         pagesScraped++; 
-        //process.stdout.write(`(${pagesScraped}/${maxPages}) `);
         callback(pageSubjects);
         if (pagesScraped == maxPages){
             finishedCallBack();
@@ -133,4 +133,11 @@ scrapeSubjects((allSubjects) => {
     const end = Date.now();
     const timeSpent = (end-begin) / 1000; 
     console.log(`\nA total of ${allSubjects.length} subjects were parsed in ${timeSpent} seconds.`);
+    const fileContents = JSON.stringify(allSubjects);
+    fs.writeFile(outputFileName, fileContents, error=>{
+        if (error) {
+            return console.log(`Could not save file, error encountered!\n${error}`);
+        }
+        return console.log(`Subject information was saved in JSON format to ${outputFileName}!`);
+    }); 
 });
