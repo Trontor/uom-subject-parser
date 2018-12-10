@@ -60,7 +60,7 @@ const generateSearchURL = () => {
         sem = 1;
         year += 1;
     }
-    const html = `https://handbook.unimelb.edu.au/search?query=&year=${year}&types%5B%5D=subject&level_type%5B%5D=all&area_of_study=all&faculty=all&department=all`;
+    const html = `https://handbook.unimelb.edu.au/search?query=&year=${year}&types%5B%5D=subject`;
     return html;
 }
 
@@ -75,7 +75,6 @@ const getPageCount = (baseURL, callback) => {
         const $ = cheerio.load(html);
         const pageCountDirty = $('.search-results__paginate > div > span').text();
         const pageCountClean = parseInt(pageCountDirty.replace(/^\D+/g, ''));
-        console.log(`There are ${pageCountClean} pages to parse.`);
         callback(pageCountClean);
     });
 }
@@ -117,6 +116,7 @@ const scrapeSubjects = (finishedCallBack) => {
     let allSubjects = [];
     const baseURL = generateSearchURL();
     getPageCount(baseURL, count => {
+        console.log(`There are ${count} pages to parse from ${decodeURI(baseURL)}.\n`);
         scrapeBar.start(count, 1);
         for (let pageNo = 1; pageNo <= count; pageNo++){
             scrapePage(baseURL, pageNo, count, pageSubjects=>{
@@ -127,7 +127,10 @@ const scrapeSubjects = (finishedCallBack) => {
     });
 }
 
+const begin=Date.now(); 
 scrapeSubjects((allSubjects) => {
     scrapeBar.stop();
-    console.log(`A total of ${allSubjects.length} subjects were parsed.`);
+    const end = Date.now();
+    const timeSpent = (end-begin) / 1000; 
+    console.log(`\nA total of ${allSubjects.length} subjects were parsed in ${timeSpent} seconds.`);
 });
